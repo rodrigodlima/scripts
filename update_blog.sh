@@ -2,7 +2,7 @@
 
 # Script para atualização do Blog
 
-DIR=/Users/rodrigo.lima/git
+DIR=/Users/Rodrigo/git
 REPO=blog
 
 # Remove diretório se existir
