@@ -230,6 +230,7 @@ echo "3. Private DNS Zone records:"
 az network private-dns record-set list \
   --resource-group rg-agilinm-poc \
   --zone-name "$PRIVATE_DNS_ZONE" \
+  --query "[].{Name:name, Type:type}" \
   --output table
 
 echo "4. Container App status:"
