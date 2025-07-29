@@ -1,0 +1,46 @@
+properties:
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 3000
+      transport: auto
+      allowInsecure: false
+    registries:
+      - server: fiergs.azurecr.io
+        identity: /subscriptions/90d2fc37-8f87-4938-ab37-060c2b839604/resourcegroups/rg-agilinm-poc/providers/Microsoft.ManagedIdentity/userAssignedIdentities/containerapp-identity
+    secrets:
+      - name: mysql-password
+        value: "your-mysql-password"
+  template:
+    containers:
+      - image: fiergs.azurecr.io/app-agilinm-webapp-br:20250721-140551.00f5b4d6
+        name: app-agilinm-poc
+        env:
+          - name: DB_HOST
+            value: "your-mysql-fqdn"
+          - name: DB_USER
+            value: "your-mysql-user"
+          - name: DB_PASSWORD
+            secretRef: mysql-password
+          - name: DB_NAME
+            value: "app_database"
+          - name: DB_PORT
+            value: "3306"
+        resources:
+          cpu: 1.25
+          memory: 2.5Gi
+        volumeMounts:
+          - volumeName: dotenv
+            mountPath: /opt/file_share
+    scale:
+      minReplicas: 1
+      maxReplicas: 5
+    volumes:
+      - name: dotenv
+        storageType: AzureFile
+        storageName: dotenv-storage
+  identity:
+    type: UserAssigned
+    userAssignedIdentities:
+      "/subscriptions/90d2fc37-8f87-4938-ab37-060c2b839604/resourcegroups/rg-agilinm-poc/providers/Microsoft.ManagedIdentity/userAssignedIdentities/containerapp-identity": {}
