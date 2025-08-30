@@ -18,11 +18,11 @@ properties:
         name: app-agilinm-poc
         env:
           - name: DB_HOST
-            value: "your-mysql-fqdn"
+            value: "mysql-agilinm-poc"
           - name: DB_USER
-            value: "your-mysql-user"
+            value: "admin"
           - name: DB_PASSWORD
-            secretRef: mysql-password
+            value: "SuaSenhaSegura123!"
           - name: DB_NAME
             value: "app_database"
           - name: DB_PORT
