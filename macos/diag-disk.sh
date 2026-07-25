@@ -82,10 +82,37 @@ ls -lh /private/var/vm/ 2>/dev/null | sed 's/^/  /' || true
 
 # ─────────────────────────────────────────────────────────────
 section "7. Top 25 maiores arquivos do disco inteiro"
-echo "(pode demorar 1-2 min — varre arquivos > 500 MB)"
-sudo find / -type f -size +500M 2>/dev/null \
-  -not -path '/System/Volumes/Data/private/var/vm/*' \
-  -exec du -h {} + 2>/dev/null | sort -hr | head -25
+echo "(pode levar 1-2 min — o disco tem ~milhões de arquivos p/ inspecionar)"
+# IMPORTANTE: pega a senha do sudo ANTES do pipe. Se pedir dentro do
+# 'sudo find ... | xargs', o prompt some no pipe e o script parece travado.
+if ! sudo -v; then
+  echo "  (sudo negado — pulei esta seção)"
+else
+  # timeout opcional (coreutils). Sem ele, roda sem limite.
+  TO=""
+  command -v timeout  >/dev/null 2>&1 && TO="timeout 300"
+  command -v gtimeout >/dev/null 2>&1 && TO="gtimeout 300"
+  # -xdev: fica no volume de dados, sem cruzar mounts (discos externos,
+  #        rede, autofs /home) nem o firmlink de /System/Volumes/Data.
+  #
+  # -prune nas pastas de nuvem: iCloud Drive (Mobile Documents), file-providers
+  #   (CloudStorage: Dropbox/OneDrive/Google Drive), CloudDocs e lixeiras.
+  #   Sem isso, o find faz stat em arquivos "dataless" (só na nuvem) e dispara
+  #   chamadas de rede por arquivo — é o que trava por horas.
+  #
+  # ! -flags +dataless: ignora qualquer arquivo ainda não baixado localmente,
+  #   evitando materialização (download) durante a varredura.
+  sudo $TO find /System/Volumes/Data -xdev \
+    \( -path '*/private/var/vm' \
+       -o -path '*/Library/Mobile Documents' \
+       -o -path '*/Library/CloudStorage' \
+       -o -path '*/Library/Application Support/CloudDocs' \
+       -o -path '*/.Trash' \
+       -o -path '*/.Trashes' \
+    \) -prune -o \
+    -type f -size +500M ! -flags +dataless -print0 2>/dev/null \
+    | xargs -0 du -h 2>/dev/null | sort -hr | head -25
+fi
 
 echo
 hr
